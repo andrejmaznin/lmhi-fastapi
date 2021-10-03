@@ -1,13 +1,14 @@
 from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 
-from app.api.response_models.users import AuthSuccess, GetSuccess
+from app.api.response_models.users import *
 from app.db import db_session
 from app.db.db_models.users import User
 
 router = APIRouter()
 
 
-@router.get("/users", name="users", status_code=201)
+@router.get("/users", name="users", status_code=201, response_model=UserGetResponse, response_model_exclude_unset=True)
 def get_user():
     session = db_session.create_session()
 
@@ -15,30 +16,28 @@ def get_user():
     users = [{"email": i.email, "hashed_password": i.hashed_password, "name": i.name, "info": i.info,
               "session": i.session} for i in users]
 
-    response = GetSuccess.as_dict(GetSuccess, users)
+    response = Success.as_dict(Success, "users", users)
     return response
 
 
-@router.post("/users", name="users", status_code=201)
-def post_user(self):
-    payload = request.get_json(force=True)
-
+@router.post("/users", name="users", status_code=201, response_model=UserPostResponse,
+             response_model_exclude_unset=True)
+def post_user(user: UserIn):
     session = db_session.create_session()
-    if not session.query(User).filter(User.email == payload["email"]).all():
+    if not session.query(User).filter(User.email == user.email).all():
         user = User(
-            name=payload['name'],
-            hashed_password=payload["hashed_password"],
-            email=payload['email'],
-            info=payload['info']
+            name=user.name,
+            hashed_password=user.hashed_password,
+            email=user.email,
+            info=user.info
         )
         session.add(user)
-        user_id = session.query(User).filter_by(
-            email=payload["email"]).one().id  # получаем id созданного пользователя, чтобы сообщить его в ответе
         session.commit()
-        response = jsonify({'success': 'OK', "id": user_id})
-        response.status_code = 201
-        return response
+
+        user_id = session.query(User).filter_by(
+            email=user.email).one().id  # получаем id созданного пользователя, чтобы сообщить его в ответе
+
+        return {"id": user_id, "success": "OK"}
+
     else:
-        response = jsonify({'ERROR': 'USER ALREADY EXISTS'})
-        response.status_code = 400
-        return response
+        return JSONResponse(status_code=400, content={"ERROR": "USER ALREADY EXISTS"})

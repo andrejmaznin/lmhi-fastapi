@@ -1,28 +1,38 @@
-import enum
+from enum import Enum
+
+from pydantic import BaseModel
 
 
-class GetSuccess(enum.Enum):
+class UserIn(BaseModel):
+    name: str
+    hashed_password: str
+    email: str
+    info: str
+
+
+class Success(Enum):
     success = "OK"
-    users = {}
 
-    def as_dict(self, users):
-        return self.__dict__.update({"users": users})
+    def as_dict(self, name: str, payload: list):
+        response = {self.success.name: self.success.value, name: payload}
+        return response
 
 
-class AuthSuccess(enum.Enum):
+class Failure(Enum):
+    id = "USER ID"
+    session = "SESSION"
+    login = "USERNAME, LOGIN OR PASSWORD"
+
+    def as_dict(self, payload):
+        value = eval(f"self.{payload}")
+        return self.dict().update({"ERROR": f"WRONG {value}"})
+
+
+class UserGetResponse(BaseModel):
     success = "OK"
-
-    def as_dict(self, sessions):
-        return {self.success.name: self.success.value, "sessions": sessions}
+    users: list
 
 
-class AuthLoginFailure(enum.Enum):
-    message = "WRONG USERNAME, LOGIN, PHONE OR PASSWORD"
-
-
-class AuthExitFailure(enum.Enum):
-    user_id = "USER ID"
-    session_id = "SESSION ID"
-
-    def __init__(self, parameter):
-        self.message = f"WRONG {parameter}"
+class UserPostResponse(BaseModel):
+    id: int
+    success = "OK"
