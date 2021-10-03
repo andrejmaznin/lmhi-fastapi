@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.response_models.auth import AuthSuccess, CreateSuccess
+from app.api.response_models.users import AuthSuccess, GetSuccess
 from app.db import db_session
 from app.db.db_models.users import User
 
@@ -15,7 +15,7 @@ def get_user():
     users = [{"email": i.email, "hashed_password": i.hashed_password, "name": i.name, "info": i.info,
               "session": i.session} for i in users]
 
-    response = CreateSuccess.as_dict(CreateSuccess, users)
+    response = GetSuccess.as_dict(GetSuccess, users)
     return response
 
 

@@ -1,7 +1,7 @@
 import enum
 
 
-class CreateSuccess(enum.Enum):
+class GetSuccess(enum.Enum):
     success = "OK"
     users = {}
 
