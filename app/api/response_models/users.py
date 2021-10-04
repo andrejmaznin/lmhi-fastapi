@@ -1,11 +1,26 @@
 from pydantic import BaseModel
 
 
-class UserIn(BaseModel):
+class UserPostIn(BaseModel):
     name: str
     hashed_password: str
     email: str
     info: str
+
+
+class SessionsGetResponse(BaseModel):
+    success: bool
+    sessions: list
+
+
+class UserExitIn(BaseModel):
+    success: bool
+    id: int
+    login: str
+
+
+class UserExitOut(BaseModel):
+    success: bool
 
 
 class UserLoggedIn(BaseModel):
@@ -23,6 +38,6 @@ class UserGetResponse(BaseModel):
     users: list
 
 
-class UserPostResponse(BaseModel):
+class UserOut(BaseModel):
     id: int
     success = bool
