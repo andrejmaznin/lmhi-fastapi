@@ -1,8 +1,11 @@
+import sqlalchemy
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-
+from sqlalchemy import or_
+import sqlalchemy.exc
 from app.api.response_models.users import *
 from app.db import db_session
+from app.db.db_models.auth_sessions import Session
 from app.db.db_models.users import User
 
 router = APIRouter()
@@ -15,9 +18,7 @@ def get_user():
     users = session.query(User).all()
     users = [{"email": i.email, "hashed_password": i.hashed_password, "name": i.name, "info": i.info,
               "session": i.session} for i in users]
-
-    response = Success.as_dict(Success, "users", users)
-    return response
+    return {"success": True, "users": users}
 
 
 @router.post("/users", name="users", status_code=201, response_model=UserPostResponse,
@@ -41,3 +42,32 @@ def post_user(user: UserIn):
 
     else:
         return JSONResponse(status_code=400, content={"ERROR": "USER ALREADY EXISTS"})
+
+
+@router.post("/auth/login", name="auth", status_code=201, response_model=UserLoggedIn,
+             response_model_exclude_unset=True)
+def post_auth(user_in: UserAuthIn):
+    session = db_session.create_session()
+
+    try:
+        user = session.query(User).filter(
+            or_(User.email == user_in.login, User.phone == user_in.login,
+                User.login == user_in.login)).one()
+
+    except sqlalchemy.exc.NoResultFound:
+        return JSONResponse(status_code=400, content={'ERROR': 'NO USER'})
+
+    if user_in.hashed_password == user.hashed_password:
+        auth = Session(
+            user_id=user.id)
+
+        session.add(auth)
+        session.commit()
+
+        session_id = session.query(Session).filter_by(user_id=user.id).all()[-1].id
+        user.session = user.session + [session_id] if user.session else [session_id]
+
+        session.commit()
+        return {"session_id": session_id, 'success': 'OK'}
+
+    return JSONResponse(status_code=400, content={"ERROR": "WRONG USERNAME, LOGIN, PHONE OR PASSWORD"})
