@@ -74,7 +74,7 @@ def post_auth_login(user_in: UserAuthIn):
     return JSONResponse(status_code=400, content={"ERROR": "WRONG USERNAME, LOGIN, PHONE OR PASSWORD"})
 
 
-@router.post("/auth/exit", name="exit", status_code=201, response_model=UserExited,
+@router.post("/auth/exit", name="exit", status_code=201, response_model=UserExitOut,
              response_model_exclude_unset=True)
 def post_auth_exit(user_in: UserExitIn):
     session = db_session.create_session()
