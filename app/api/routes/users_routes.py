@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from sqlalchemy import or_
 
-from app.api.response_models.users import *
+from app.api.request_models.users import *
 from app.db import db_session
 from app.db.db_models.auth_sessions import Session
 from app.db.db_models.users import User
